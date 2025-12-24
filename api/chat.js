@@ -1,14 +1,27 @@
 export default async function handler(req, res) {
+  // --- CORS (allow your website) ---
+  const allowedOrigins = new Set([
+    "https://apextsgroup.com",
+    "https://www.apextsgroup.com"
+  ]);
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   // Allow only POST
   if (req.method !== "POST") {
     return res.status(405).json({ reply: "Method not allowed." });
   }
-
-  // Basic CORS (safe default). If you want to lock it to your domain, see notes below.
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
     const userMessage = String(req.body?.message || "").slice(0, 2000);
@@ -53,7 +66,12 @@ Booking:
 Escalation rules:
 Escalate immediately if: user asks for a human, pricing disputes, complaints, technical issues, or you are uncertain.
 Escalation contacts: info@apextsgroup.com | 831-915-6596
-`;
+
+Hard rules:
+- Do not invent details.
+- Do not guarantee outcomes.
+- Do not provide legal/medical advice.
+`.trim();
 
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -65,17 +83,17 @@ Escalation contacts: info@apextsgroup.com | 831-915-6596
         model: "gpt-4.1-mini",
         temperature: 0.4,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT.trim() },
-          { role: "user", content: userMessage }
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userMessage },
         ],
       }),
     });
 
     if (!openaiRes.ok) {
-      const errText = await openaiRes.text();
+      const err = await openaiRes.text();
       return res.status(500).json({
         reply: "Sorry — I’m having trouble right now. Please email info@apextsgroup.com.",
-        error: errText,
+        error: err,
       });
     }
 

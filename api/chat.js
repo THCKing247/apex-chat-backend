@@ -1,35 +1,11 @@
 export default async function handler(req, res) {
-  // CORS — must be first
+  // 1) CORS — MUST be set for every request, including OPTIONS
   const origin = req.headers.origin || "";
-  const allowed = ["https://apextsgroup.com", "https://www.apextsgroup.com"];
-
-  if (allowed.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  // Preflight
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  // Only POST
-  if (req.method !== "POST") {
-    return res.status(405).json({ reply: "Method not allowed." });
-  }
-
-  // ...keep the rest of your code here...
-}
-export default async function handler(req, res) {
-  // --- CORS (allow your website) ---
   const allowedOrigins = new Set([
     "https://apextsgroup.com",
-    "https://www.apextsgroup.com"
+    "https://www.apextsgroup.com",
   ]);
 
-  const origin = req.headers.origin;
   if (allowedOrigins.has(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
@@ -37,12 +13,12 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight
+  // 2) Handle preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  // Allow only POST
+  // 3) Only allow POST
   if (req.method !== "POST") {
     return res.status(405).json({ reply: "Method not allowed." });
   }

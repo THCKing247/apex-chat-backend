@@ -8,13 +8,22 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // Check if environment variables are set
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // If env vars are missing, just pass through (might be during build)
+    return response
+  }
+
   // Determine if we're in production
   const isProduction = process.env.NODE_ENV === 'production'
 
   // Create Supabase client with cookie handling
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -41,8 +50,13 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired
-  await supabase.auth.getUser()
+  // Refresh session if expired (catch errors to prevent build failures)
+  try {
+    await supabase.auth.getUser()
+  } catch (error) {
+    // Ignore auth errors in middleware (might be during build)
+    console.error('Middleware auth error:', error)
+  }
 
   return response
 }

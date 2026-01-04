@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
+// Mark as dynamic to prevent prerendering
+export const dynamic = 'force-dynamic'
+
 export default function ChatPage() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
